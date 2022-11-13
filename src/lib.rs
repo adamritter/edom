@@ -593,7 +593,6 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
         }
         let mut relpos: isize=0;
         let mut wrong_place: HashSet<u64>=HashSet::new();
-        let mut create=Vec::new();
         let mut edom : &mut EDOM<EN>=&mut self.edom;
 
         // first_create is slower for some reason
@@ -622,55 +621,26 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
                         &v[i-1].1.dnode.unwrap())
                     }
                 }
-                if first_create {
-                    let mut it : ElementIterator<EN>=ElementIterator::new(
-                        edom, &mut v[i].1, i, Some(self_ptr));
-                    fcb(&mut e, &mut it);
-                    edom=it.edom;
-                } else {
-                    create.push(false);
-                }
+                let mut it : ElementIterator<EN>=ElementIterator::new(
+                    edom, &mut v[i].1, i, Some(self_ptr));
+                fcb(&mut e, &mut it);
+                edom=it.edom;
             } else {
-                // Insert new elem, increase relpos.
-                let elem = Element::new(tag, Some(edom.document.create_element(tag)), edom.next_uid());
-
-                if ! first_create {
-                    create.push(true);
-
-                    if i == v.len() {
-                        dnode.append_child(&elem.dnode.unwrap());
-                    } else {
-                        dnode.append_child_before(&elem.dnode.unwrap(), &v[i].1.dnode.unwrap());
-                    }
-                }
+                let last_elem=if i>0 {Some(&v[0].1)} else {None};
+                let elem=Self::create_for_each_element(
+                    e, edom, v.len(),
+                    &mut fcb, self_ptr, 
+                    tag, last_elem);
 
                 v.insert(i, (idx, elem));
                 relpos+=1;
                     
-                if i>0 && edom.clone_for_each {
-                    let new_dnode=v[0].1.dnode.unwrap().deep_clone();
-                    if edom.use_partial_clone {
-                        let last_elem = &v[0].1;
-                        let mut element=last_elem.shallow_clone(Some(new_dnode), edom);
-                        let it=ElementIterator::new(edom, &mut element, i, None);
-                        last_elem.partial_clone_using_dnode(it);
-                        v[i]=(v[i].0, element);
-                    } else {
-                        v[i]=(v[i].0, v[0].1.clone_using_dnode(new_dnode, edom));
-                    }
-                } else {
-                    edom.create=true;
-                    let mut it=ElementIterator::new(edom, &mut v[i].1, i, Some(self_ptr));
-                    fcb(&mut e, &mut it);
-                    edom=it.edom;
-                    edom.create=false;
-                }
                 if i+1 == v.len() {
                     dnode.append_child(&v[i].1.dnode.unwrap());
                 } else {
-                    dnode.append_child_before(&v[i].1.dnode.unwrap(), &v[i+1].1.dnode.unwrap());
+                    dnode.append_child_before(&v[i].1.dnode.unwrap(), 
+                        &v[i+1].1.dnode.unwrap());  // Not sure that this is the next sibling
                 }
-
             }
             i+=1;
         }
@@ -681,7 +651,6 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
         }
 
         self.childpos+=1;
-        edom.create=false;
     }
 
     fn create_for_each_element<'x, FCB, I>(
