@@ -1,0 +1,42 @@
+[package]
+name = "edom"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2.83"
+js-sys = "0.3.60"
+console_error_panic_hook = "0.1.7"
+getrandom = {version = "0.2.8", features = ["js"]}
+rand = {version = "0.8.5", features = ["small_rng"]}
+smallstr = {version = "0.3.0"}
+
+[dependencies.web-sys]
+version = "0.3.53"
+features = [
+  'Document',
+  'DomTokenList',
+  'Element',
+  'Event',
+  'EventTarget',
+  'HtmlElement',
+  'Node',
+  'NodeList',
+  'Window',
+  'Text',
+  'console'
+]
+
+[profile.release]
+lto = true
+# panic = "abort"
+
+[dev-dependencies]
+criterion = "0.4"
+
+[[bench]]
+name = "bench"
+harness = false
