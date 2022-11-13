@@ -480,11 +480,11 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
     fn new(edom:&'d mut EDOM<EN>, element:&'e mut Element<EN>, parent_access_pos: usize, parent_iterator: Option<*const ElementIterator<'d ,'d,EN>>)->ElementIterator<'d,'e,EN> {
          ElementIterator {edom, element, attrpos: 0, childpos: 0, eventpos: 0, parent_access_pos, parent_iterator}
      }
-    fn get_dnode2(dnode: &'a CachedValue<EN>, parent_iterator: &Option<*const ElementIterator<EN>>, parent_access_pos: usize)->&'a EN {
+    fn get_dnode_using_parameters(dnode: &'a CachedValue<EN>, parent_iterator: &Option<*const ElementIterator<EN>>, parent_access_pos: usize)->&'a EN {
         dnode.get(|| unsafe {&**parent_iterator.as_ref().unwrap()}.get_dnode().get_child_node(parent_access_pos as u32).into_element_node())
     }
     fn get_dnode(&self)->&EN {
-        Self::get_dnode2(&self.element.dnode, &self.parent_iterator, self.parent_access_pos)
+        Self::get_dnode_using_parameters(&self.element.dnode, &self.parent_iterator, self.parent_access_pos)
         // self.element.dnode.get(|| unsafe {(&**self.parent_iterator.as_ref().unwrap())}.get_dnode().get_child_node(self.parent_access_pos as u32).into_element_node())
     }
 
@@ -506,12 +506,10 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
     }
     
     pub fn text(&mut self, text:&str) {
-        let use_set_text_content = true;
         if self.edom.create {
-            if use_set_text_content && self.element.children.len()==0 {
+            if self.element.children.len()==0 {
                 self.get_dnode().set_text_content(text);
                 self.element.children.push(Node::Text(text.into(), None));
-
             } else {
                 let tdnode=self.edom.document.create_text_node(text);
                 self.get_dnode().append_text_child(&tdnode);
@@ -519,37 +517,45 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
                 self.element.children.push(elem);
             }
         } else {
-            let n=self.element.children.len();
             let elem = &mut self.element.children[self.childpos];
-            if let Node::Text(text2, tdnode)=elem {
-                if *text != **text2 {
-                    Self::get_dnode2(&self.element.dnode, &self.parent_iterator, self.parent_access_pos);
-                    let dnode=self.element.dnode.unwrap();
-                    *text2=text.into();
-                    if n==1 && use_set_text_content {
-                        *tdnode=None;
-                        dnode.set_text_content(text);
-                    } else {
-                        let new_child=self.edom.document.create_text_node(text);
-                        if tdnode.is_none() {
-                            *tdnode=Some(dnode.get_child_node(self.childpos as u32).into_text_node());
-                        }
-                        dnode.replace_text_child(&new_child, tdnode.as_ref().unwrap());
-                        *tdnode=Some(new_child);
-                    }
-                }
-            } else {
+            let Node::Text(text2, tdnode)=elem else {
                 panic!("Not text");
+            };
+            if *text != **text2 {
+                Self::get_dnode_using_parameters(
+                    &self.element.dnode, &self.parent_iterator, self.parent_access_pos);
+                *text2=text.into();
+                self.update_text_content_for_current_child();
             }
             self.childpos+=1;
         }
     }
+
+    fn update_text_content_for_current_child(&mut self) {
+        let n=self.element.children.len();
+        let dnode=self.element.dnode.unwrap();
+        let elem = &mut self.element.children[self.childpos];
+        let Node::Text(text, text_dnode)=elem else {
+            panic!("No text child found");
+        };
+
+        if n==1 {
+            *text_dnode=None;
+            dnode.set_text_content(text);
+        } else {
+            let new_child=self.edom.document.create_text_node(text);
+            if text_dnode.is_none() {
+                *text_dnode=Some(dnode.get_child_node(self.childpos as u32).into_text_node());
+            }
+            dnode.replace_text_child(&new_child, text_dnode.as_ref().unwrap());
+            *text_dnode=Some(new_child);
+        }
+    }
+
     fn event<F>(&'f mut self, name:&'static str, mut f: F)->&'f mut Self where F:FnMut() {
         if self.edom.create {
             self.element.events.push(name);
             self.element.create_event_listener(name, self.edom, self.get_dnode());
-
-            // self.get_dnode().create_event_listener(self.edom.fire_event.clone(), self.element.uid, name);
         } else if let Some(ev) = &self.edom.firing_event  {
             if self.element.uid == ev.0 {
                 if *self.element.events[self.eventpos]==*ev.1  {
@@ -584,7 +590,6 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
         let Node::ForEach(v) : &mut Node<EN>=&mut self.element.children[self.childpos] else {
             panic!("Bad node");
         };
-        EN::Document::log_2("consolidate, vlength:", &v.len().to_string());
 
         // position[idx]+relpos will contain the position of idx Element for all shown elements in v[ii] where ii>=i.
         let mut position:HashMap<u64, usize>=HashMap::new();
@@ -594,9 +599,6 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
         let mut relpos: isize=0;
         let mut wrong_place: HashSet<u64>=HashSet::new();
         let mut edom : &mut EDOM<EN>=&mut self.edom;
-
-        // first_create is slower for some reason
-        let first_create=true;
         let mut i=0;
 
         for mut e in list {
@@ -646,7 +648,6 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> ElementIterator<'d, 'e, EN> where EN:Elemen
         }
 
         while v.len() > i {  // Remove remaining children
-            v.last().unwrap().1.dnode.unwrap().remove();
             v.pop();
         }
 
