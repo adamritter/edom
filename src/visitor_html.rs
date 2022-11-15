@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use super::dom;
+use super::dom::Document;
 use super::visitor::Visitor;
 
 impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNode {
@@ -118,8 +119,11 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     pub fn text_input(&'f mut self, value: &mut String)->Visitor<'f,'f,EN> {
         let mut r=self.element("input");
         r.attr("value", value.as_str());
-        if r.changed() {
+        let mut changed=false;
+        r.on("input", |_| changed=true);
+        if changed {
             *value=r.get_dnode().get_attribute("value");
+            EN::Document::log_2("changed to", (*value).as_str());
             r.element.attr[0]=("value", Rc::new(value.to_string()));
         }
         r.attr("type", "text");

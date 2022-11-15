@@ -1,13 +1,13 @@
 TODO:
+    - Convert examples from other frameworks, show comparisions.
     - Recursive foreach
     - Server side rendering
-    - Benchmark
-        - Create 10k elements
-        - Swap speed
-        - Try RC<String>
+    + Benchmark
+        + Create 10k elements
+        + Swap speed
+        + Try RC<String>
     - Implement inmemorydom
-    - Convert examples from other frameworks, show comparisions.
-    - Improve class names (Iterator to visitor, others easier after different files/namespaces)
+    - Improve class names (ElementNode -> Element?)
     - Tutorial
     - fetch
     - HN clone

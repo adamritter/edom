@@ -2,7 +2,7 @@
 extern crate console_error_panic_hook;
 extern crate smallstr;
 
-use dom::{EventHandler, Document};
+pub use dom::{EventHandler, Document};
 
 pub mod dom;
 pub mod wasm;
@@ -10,8 +10,8 @@ pub mod vdom;
 use std::rc::Rc;
 use std::cell::RefCell;
 pub mod visitor;
-use vdom::{Element, Node};
-use visitor::Visitor;
+pub use visitor::Visitor;
+pub use dom::ElementNode;
 
 pub struct EDOM<EN> where EN:dom::ElementNode {
     firing_event: Option<(u64, String, EN::Event)>,
@@ -22,7 +22,7 @@ pub struct EDOM<EN> where EN:dom::ElementNode {
     clone_for_each: bool,  // Clone node for for_each instead of building up the DOM tree.
     nodes_attached: u64,
     use_partial_clone: bool,
-    root: Option<Element<EN>>,
+    root: Option<vdom::Element<EN>>,
     event_handler: EN::EventHandler
 }
 
@@ -43,7 +43,7 @@ impl<EN> EDOM<EN> where EN:dom::ElementNode {
 
     pub fn render<F>(root: EN, mut f:F)->Rc<RefCell<EDOM<EN>>>
             where EN:dom::ElementNode + 'static, F:FnMut(Visitor<EN>) + 'static {
-        let el=Element::new("body", Some(root), 0);
+        let el=vdom::Element::new("body", Some(root), 0);
         let mut edom : EDOM<EN>=EDOM::new(el);
         assert_eq!(0, edom.next_uid());
         edom.create=true;
@@ -66,7 +66,7 @@ impl<EN> EDOM<EN> where EN:dom::ElementNode {
         edomrc
    }
 
-    fn new(root: Element<EN>)->Self {
+    fn new(root: vdom::Element<EN>)->Self {
         let fire_event:Rc<RefCell<Box<dyn FnMut(u64, String, EN::Event)>>>=Rc::new(RefCell::new(
                 Box::new(|a:u64, b:String, _:EN::Event|
                     web_sys::console::log_3(&"rc".into(), &a.to_string().into(), 
@@ -130,15 +130,15 @@ fn test_nodes_attached() {
     let edom=(*edom).borrow_mut();
     let root=edom.root.as_ref().unwrap();
     assert_eq!("body", root.name);
-    let Node::Element(table)=&root.children[1] else {panic!("No tbody found")};
+    let vdom::Node::Element(table)=&root.children[1] else {panic!("No tbody found")};
     assert_eq!("tbody", table.name);
-    let Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
+    let vdom::Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
     assert_eq!(3, fe.len());
     let tr=&fe[1].1;
     assert_eq!("tr", tr.name);
-    let Node::Text(s, _)=&tr.children[0] else {panic!("No text found")};
+    let vdom::Node::Text(s, _)=&tr.children[0] else {panic!("No text found")};
     assert_eq!("5", s.as_str());
-    let Node::Element(table_last_h1)=&tr.children[2] else {panic!("No table_div found")};
+    let vdom::Node::Element(table_last_h1)=&tr.children[2] else {panic!("No table_div found")};
     assert!(table_last_h1.dnode.is_none());
 }
 
@@ -176,10 +176,10 @@ fn test_swap_rows() {
     fire_event.borrow_mut()(1, "click".to_string(), noop::Event {});
     let edom=(*edom).borrow_mut();
     let root=edom.root.as_ref().unwrap();
-    let Node::Element(table)=&root.children[1] else {panic!("No table")};
+    let vdom::Node::Element(table)=&root.children[1] else {panic!("No table")};
     assert_eq!("tbody", table.name);
-    let Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
-    let Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
+    let vdom::Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
+    let vdom::Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
     assert_eq!("3", s.as_str());
 }
 
@@ -203,9 +203,9 @@ fn test_remove_row() {
     fire_event.borrow_mut()(1, "click".to_string(), noop::Event {});
     let edom=(*edom).borrow_mut();
     let root=edom.root.as_ref().unwrap();
-    let Node::Element(table)=&root.children[1] else {panic!("No table")};
+    let vdom::Node::Element(table)=&root.children[1] else {panic!("No table")};
     assert_eq!("tbody", table.name);
-    let Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
-    let Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
+    let vdom::Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
+    let vdom::Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
     assert_eq!("3", s.as_str());
 }

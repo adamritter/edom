@@ -20,7 +20,7 @@ impl dom::EventHandler for WasmEventHandler {
                 &e.type_().into());
             web_sys::console::log_2(&"in event handler data-uid=".to_string().into(),
                 &uid.to_string().into());
-            e.prevent_default();
+            // e.prevent_default();
         ((*fire_event).borrow_mut())(uid, name.to_string(), e);
         })  as Box<dyn FnMut(_)>);
         Self {closure}
@@ -116,7 +116,10 @@ impl dom::ElementNode for web_sys::Element {
         if name=="checked" {
             let e: &web_sys::HtmlInputElement= self.dyn_ref().unwrap();
             e.set_checked(value=="true");
-        } else {
+        } else if name=="value" {
+            let e: &web_sys::HtmlInputElement= self.dyn_ref().unwrap();
+            e.set_value(value);
+         } else {
             web_sys::Element::set_attribute(self, name, value).unwrap();
         }
     }
@@ -124,6 +127,9 @@ impl dom::ElementNode for web_sys::Element {
         if name=="checked" {
             let e: &web_sys::HtmlInputElement= self.dyn_ref().unwrap();
             if e.checked() {"true".to_string()} else {"false".to_string()}
+        } else if name=="value" {
+            let e: &web_sys::HtmlInputElement= self.dyn_ref().unwrap();
+            e.value()
         } else {
             web_sys::Element::get_attribute(self, name).unwrap()
         }
@@ -142,7 +148,7 @@ impl dom::ElementNode for web_sys::Element {
             web_sys::console::log_2(&"e=".to_string().into(), &e.type_().into());
 
             f.borrow_mut()(uid, name);
-            e.prevent_default();
+            // e.prevent_default();
         })  as Box<dyn FnMut(_)>);
         self.add_event_listener_with_callback(name, closure.as_ref().unchecked_ref()).unwrap();
         closure.forget();

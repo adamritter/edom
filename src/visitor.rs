@@ -52,6 +52,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         e
     }
     fn insert_after_last_visible_dnode(&self, child: &EN::GenericNode) {
+        EN::Document::log_2("Inserting element at", self.next_dom_child_pos.to_string().as_str());
         self.get_dnode().insert_child_before(
             child,
             self.get_dnode().get_child_node(self.next_dom_child_pos as u32).as_ref());
@@ -250,6 +251,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
                     position.insert(v[abspos].0, abspos);
                 }
                 if wrong_place.contains(&idx) {
+                    #[allow(mismatched_arg_count)]
                     wrong_place.remove(&idx);
                     if i==0 {
                         // TODO: get last visited child to support for_each after other elements

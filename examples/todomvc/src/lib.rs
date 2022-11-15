@@ -1,6 +1,8 @@
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 use wasm_bindgen::{JsCast};
+use edom::ElementNode;
+use edom::Visitor;
 
 #[derive(PartialEq)]
 enum ShowState {
@@ -21,9 +23,11 @@ use edom;
 const ENTER_KEY: u32 = 13;
 const ESCAPE_KEY: u32 = 27;
 
+use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 
 // TODO: how to run server?
-fn main() {
+#[wasm_bindgen(start)]
+pub fn main() {
     todomvc();
 }
 
@@ -38,9 +42,9 @@ fn todomvc() {
     let mut new_text=String::new();
 	let mut editing = None;
     let mut edit_value = None;
-
-    edom::render(move |mut root| {
+    edom::wasm::render(move |mut root| {
         local_storage.set_item("todos-edom", serde_json::to_string(&todolist).unwrap().as_str()).unwrap();
+        let mut root=root.element("span");
         /*
             root.head(|head| {
                 head.title("TODOMVC implemented with EDOM");
@@ -57,12 +61,15 @@ fn todomvc() {
 
         root.header(|header| {
             header.h1().text("todos");
+            header.text_input(&mut new_text);
             header.text_input(&mut new_text).class("new-todo")
             .placeholder("What needs to be done?").autofocus(true).on("keydown", |e| {
                 if e.dyn_ref::<web_sys::KeyboardEvent>().unwrap().which() == ENTER_KEY {
                     todolist.push(TodoItem {id: Uuid::new_v4(), completed: false, description: new_text.clone()});
                     new_text.clear();
-                    e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
+                    web_sys::console::log_2(&"Enter".into(), &new_text.clone().into());
+                    // e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
+                    e.prevent_default();
                 }
             });
         }).class("header");
@@ -127,8 +134,8 @@ fn todomvc() {
     });
 }
 
-fn render_footer<EN>(container : &mut edom::Visitor<EN>, todolist :&mut Vec<TodoItem>,
-        num_active: usize, show_state: &mut ShowState) where EN: edom::ElementNode{
+fn render_footer<EN: edom::ElementNode>(container : &mut edom::Visitor<EN>, todolist :&mut Vec<TodoItem>,
+        num_active: usize, show_state: &mut ShowState) {
     container.footer(|footer| {
         footer.span(|span| {
             span.class("todo-count");
