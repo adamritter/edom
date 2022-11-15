@@ -182,3 +182,30 @@ fn test_swap_rows() {
     let Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
     assert_eq!("3", s);
 }
+
+
+#[test]
+fn test_remove_row() {
+    let mut v:Vec<u64>=vec![1,2,3,4,5,6,7,8];
+    let edom=EDOM::render(noop::ElementNode {tag:"body", generic_node: noop::Node {  }}, move |mut root| {
+        let mut button=root.button("Swap rows");
+        assert_eq!(1, button.element.uid);
+        if button.clicked() {
+            v.remove(0);
+            assert_eq!(vec![2,3,4,5,6,7,8], v);
+        }
+        let mut table=root.element("tbody");
+        table.for_each(v.iter_mut(), |e| **e, "tr", |id, node| {
+            node.text(id.to_string().as_str());
+        });
+    });
+    let fire_event=(*edom).borrow_mut().fire_event.clone();
+    fire_event.borrow_mut()(1, "click".to_string(), noop::Event {});
+    let edom=(*edom).borrow_mut();
+    let root=edom.root.as_ref().unwrap();
+    let Node::Element(table)=&root.children[1] else {panic!("No table")};
+    assert_eq!("tbody", table.name);
+    let Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
+    let Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
+    assert_eq!("3", s);
+}

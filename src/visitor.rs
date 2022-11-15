@@ -230,7 +230,17 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
             let idx=hasher.finish();
             if let Some(pos)=position.get(&idx).cloned() {
                 let abspos=add_offset(pos, relpos).unwrap();
-                if abspos!=i {
+                if abspos < i {
+                    panic!("Index is multiple times in the list probably: abspos={}, i={}, relpos={}, wrong_place={:?}, position={:?}, idx={}", abspos, i, relpos, wrong_place, position, idx);
+                }
+                if abspos==i+1 { // Special case, put current element at end of list, mark as removed
+                    let new_idx=v[i].0;
+                    wrong_place.insert(new_idx);
+                    v[i..].rotate_left(1);
+                    assert_eq!(new_idx, v.last().unwrap().0);
+                    relpos-=1;
+                    position.insert(new_idx, add_offset(v.len()-1, -relpos).unwrap());
+                } else if abspos!=i {
                     // Switch, set wrong_place indicators.
                     wrong_place.insert(idx);
                     wrong_place.insert(v[i].0);
@@ -242,6 +252,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
                 if wrong_place.contains(&idx) {
                     wrong_place.remove(&idx);
                     if i==0 {
+                        // TODO: get last visited child to support for_each after other elements
                         dnode.prepend_child(&v[i].1.dnode.unwrap());
                     } else {
                         dnode.append_child_after(&v[i].1.dnode.unwrap(),
