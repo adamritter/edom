@@ -137,7 +137,7 @@ fn test_nodes_attached() {
     let tr=&fe[1].1;
     assert_eq!("tr", tr.name);
     let Node::Text(s, _)=&tr.children[0] else {panic!("No text found")};
-    assert_eq!("5", s);
+    assert_eq!("5", s.as_str());
     let Node::Element(table_last_h1)=&tr.children[2] else {panic!("No table_div found")};
     assert!(table_last_h1.dnode.is_none());
 }
@@ -180,7 +180,7 @@ fn test_swap_rows() {
     assert_eq!("tbody", table.name);
     let Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
     let Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
-    assert_eq!("3", s);
+    assert_eq!("3", s.as_str());
 }
 
 
@@ -207,5 +207,5 @@ fn test_remove_row() {
     assert_eq!("tbody", table.name);
     let Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
     let Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
-    assert_eq!("3", s);
+    assert_eq!("3", s.as_str());
 }

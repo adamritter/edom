@@ -138,11 +138,11 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         if self.edom.create {
             if self.element.children.len()==0 {
                 self.get_dnode().set_text_content(text);
-                self.element.children.push(Node::Text(text.into(), None));
+                self.element.children.push(Node::Text(Rc::new(text.into()), None));
             } else {
                 let tdnode=self.edom.document.create_text_node(text);
                 self.get_dnode().append_text_child(&tdnode);
-                let elem=Node::Text(text.into(), Some(tdnode));
+                let elem=Node::Text(Rc::new(text.into()), Some(tdnode));
                 self.element.children.push(elem);
             }
         } else {
@@ -153,7 +153,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
             if *text != **text2 {
                 Self::get_dnode_using_parameters(
                     &self.element.dnode, &self.parent_iterator, self.parent_access_pos);
-                *text2=text.into();
+                *text2=Rc::new(text.into());
                 self.update_text_content_for_current_child();
             }
             self.childpos+=1;

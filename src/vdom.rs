@@ -7,7 +7,7 @@ use super::dom;
 use super::EDOM;
 use super::visitor::Visitor;
 pub enum Node<EN> where EN:dom::ElementNode {
-    Text(String, Option<EN::TextNode>),
+    Text(Rc<String>, Option<EN::TextNode>),
     Element(Element<EN>),
     ForEach(Vec<(u64, Element<EN>)>),
     RenderIfElement(RenderIfState, Element<EN>)
