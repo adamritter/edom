@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::dom;
 use super::visitor::Visitor;
 
@@ -74,7 +76,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         r.attr("value", value.to_string().as_str());
         if r.changed() {
             *value=r.get_dnode().get_attribute("value").parse::<f64>().unwrap();
-            r.element.attr[0]=("value", value.to_string());
+            r.element.attr[0]=("value", Rc::new(value.to_string()));
         }
         r
     }
@@ -96,7 +98,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         cb.attr("checked", checked.to_string().as_str());
         if cb.changed() {
             *checked=!*checked;
-            cb.element.attr[0]=("checked", checked.to_string());
+            cb.element.attr[0]=("checked", Rc::new(checked.to_string()));
         }
         cb.attr("type", "checkbox");
         cb
@@ -107,7 +109,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         cb.attr("checked", checked.to_string().as_str());
         if cb.changed() {
             *checked=!*checked;
-            cb.element.attr[0]=("checked", checked.to_string());
+            cb.element.attr[0]=("checked", Rc::new(checked.to_string()));
         }
         cb.attr("type", "radio").attr("name", name).attr("value", value);
         cb
@@ -118,7 +120,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         r.attr("value", value.as_str());
         if r.changed() {
             *value=r.get_dnode().get_attribute("value");
-            r.element.attr[0]=("value", value.to_string());
+            r.element.attr[0]=("value", Rc::new(value.to_string()));
         }
         r.attr("type", "text");
         r
@@ -128,7 +130,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         r.attr("value", value.as_str());
         if r.changed() {
             *value=r.get_dnode().get_attribute("value");
-            r.element.attr[0]=("value", value.to_string());
+            r.element.attr[0]=("value", Rc::new(value.to_string()));
         }
         r
     }

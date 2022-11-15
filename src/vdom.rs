@@ -56,7 +56,7 @@ impl<T> CachedValue<T> {
 
 pub struct Element<EN> where EN:dom::ElementNode {
     pub name: &'static str,
-    pub attr: Vec<(&'static str,/*Rc<*/String/*>*/)>,
+    pub attr: Vec<(&'static str,Rc<String>)>,
     pub children: Vec<Node<EN>>,
     pub dnode: CachedValue<EN>,
     pub events: Vec<&'static str>,

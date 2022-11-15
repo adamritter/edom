@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use wasm_bindgen::convert::IntoWasmAbi;
 
-use crate::dom::{Document, GenericNode};
+use crate::dom::{Document, GenericNode, ElementNode};
 use crate::vdom::{RenderIfState, CachedValue};
 
 use super::EDOM;
@@ -118,15 +118,15 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     pub fn attr(&'f mut self, name: &'static str, value: &str)->&'f mut Visitor<'d,'e,EN> {
         if self.edom.create {
             self.get_dnode().set_attribute(name, value);
-            self.element.attr.push((name, /*Rc::new*/(value.into())));
+            self.element.attr.push((name, Rc::new(value.into())));
         } else { 
             let thisattr=&mut self.element.attr[self.attrpos];
             if thisattr.0 != name {
                 panic!("name change")
             }
-            if thisattr.1 != value {
-                // thisattr.1=Rc::new(value.into());
-                thisattr.1=value.into();
+            if *thisattr.1 != value {
+                thisattr.1=Rc::new(value.into());
+                // thisattr.1=value.into();
                 self.get_dnode().set_attribute(name, value);
             }
             self.attrpos+=1
@@ -196,7 +196,15 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         }
         self
     }
-    
+
+    fn position_by_idx(v:&mut Vec<(u64, Element<EN>)>)->HashMap<u64, usize> {
+        let mut position:HashMap<u64, usize>=HashMap::new();
+        for (i, (idx, _)) in &mut v.iter().enumerate() {
+            position.insert(*idx, i);
+        }
+        position
+    }
+
     fn for_each_consolidate_changes<'g, TIdx: std::hash::Hash, FIdx, FCB, I,
             L: Iterator<Item=I>>(
             &'f mut self, list : L, mut fidx: FIdx, tag: &'static str, mut fcb: FCB) 
@@ -210,16 +218,13 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         };
 
         // position[idx]+relpos will contain the position of idx Element for all shown elements in v[ii] where ii>=i.
-        let mut position:HashMap<u64, usize>=HashMap::new();
-        for (i, (idx, _)) in &mut v.iter().enumerate() {
-            position.insert(*idx, i);
-        }
+        let mut position=Self::position_by_idx(v);
         let mut relpos: isize=0;
         let mut wrong_place: HashSet<u64>=HashSet::new();
         let mut edom : &mut EDOM<EN>=&mut self.edom;
         let mut i=0;
 
-        for mut e in list {
+        for e in list {
             let mut hasher= std::collections::hash_map::DefaultHasher::new();
             fidx(&e).hash(&mut hasher);
             let idx=hasher.finish();
@@ -244,13 +249,13 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
                     }
                 }
                 let mut it : Visitor<EN>=Visitor::new(
-                    edom, &mut v[i].1, i, Some(self_ptr));
+                    edom, &mut v[i].1, self.next_dom_child_pos, Some(self_ptr));
                 fcb(e, &mut it);
                 edom=it.edom;
             } else {
                 let last_elem=if i>0 {Some(&v[0].1)} else {None};
                 let elem=Self::create_for_each_element(
-                    e, edom, v.len(),
+                    e, edom, self.next_dom_child_pos,
                     &mut fcb, self_ptr, 
                     tag, last_elem);
 
@@ -269,6 +274,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         }
 
         while v.len() > i {  // Remove remaining children
+            v.last().unwrap().1.dnode.unwrap().remove();
             v.pop();
         }
 
