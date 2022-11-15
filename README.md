@@ -1,6 +1,10 @@
 TODO:
-    + Implement render_if
     - Recursive foreach
+    - Server side rendering
+    - Benchmark
+        - Create 10k elements
+        - Swap speed
+        - Try RC<String>
     - Implement inmemorydom
     - Convert examples from other frameworks, show comparisions.
     - Improve class names (Iterator to visitor, others easier after different files/namespaces)
@@ -14,6 +18,7 @@ TODO:
     + <input type=checkbox bind:checked={yes}>
     + <input type=radio bind:group={scoops} name="scoops" value={1}>
     + <textarea bind:value={value}></textarea>
+    + Implement render_if
     - <select bind:value={selected} on:change="{() => answer = ''}">
         - <option value={question}> text
             Note that the <option> values are objects rather than strings. Svelte doesn't mind.

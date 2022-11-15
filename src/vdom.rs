@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::dom::EventHandler;
 use crate::dom::GenericNode;
 

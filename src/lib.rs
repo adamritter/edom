@@ -2,9 +2,7 @@
 extern crate console_error_panic_hook;
 extern crate smallstr;
 
-use dom::{EventHandler, GenericNode, Document};
-use std::{collections::{HashSet, HashMap}, hash::{Hasher, Hash}};
-use std::panic;
+use dom::{EventHandler, Document};
 
 pub mod dom;
 pub mod wasm;
@@ -12,25 +10,21 @@ pub mod vdom;
 use std::rc::Rc;
 use std::cell::RefCell;
 pub mod visitor;
-use vdom::Element;
+use vdom::{Element, Node};
 use visitor::Visitor;
-
-use crate::vdom::Node;
 
 pub struct EDOM<EN> where EN:dom::ElementNode {
     firing_event: Option<(u64, String, EN::Event)>,
     last_uid: u64,
     create: bool,
     document: EN::Document,
-    fire_event: Rc<RefCell<Box<dyn FnMut(u64, String, EN::Event)>>>,
+    pub fire_event: Rc<RefCell<Box<dyn FnMut(u64, String, EN::Event)>>>,
     clone_for_each: bool,  // Clone node for for_each instead of building up the DOM tree.
     nodes_attached: u64,
     use_partial_clone: bool,
     root: Option<Element<EN>>,
     event_handler: EN::EventHandler
 }
-
-
 
 impl<EN> EDOM<EN> where EN:dom::ElementNode {
     fn next_uid(&mut self)->u64 {
@@ -59,14 +53,14 @@ impl<EN> EDOM<EN> where EN:dom::ElementNode {
         let edomrc : Rc<RefCell<EDOM<EN>>>=Rc::new(RefCell::new(edom));
         let moved_edomrc=edomrc.clone();
         *fire_event.borrow_mut()=Box::new(move |a:u64, b:String, e:EN::Event| {
-            EN::Document::log_2(a.to_string().as_str(), b.as_str());
+            // EN::Document::log_2(a.to_string().as_str(), b.as_str());
             let mut edom=moved_edomrc.borrow_mut();
             edom.nodes_attached=0;
             edom.firing_event=Some((a, b, e));
             edom.render_once(&mut f);
             edom.firing_event=None;
             edom.render_once(&mut f);
-            EN::Document::log_2("Nodes attached in render:", edom.nodes_attached.to_string().as_str());
+            // EN::Document::log_2("Nodes attached in render:", edom.nodes_attached.to_string().as_str());
         });
         std::mem::forget(fire_event);
         edomrc
@@ -88,7 +82,7 @@ impl<EN> EDOM<EN> where EN:dom::ElementNode {
     }
 }
 
-mod noop;
+pub mod noop;
 pub mod visitor_html;
 
 #[test]
