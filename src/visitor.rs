@@ -1,4 +1,7 @@
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
+
+use wasm_bindgen::convert::IntoWasmAbi;
 
 use crate::dom::{Document, GenericNode};
 use crate::vdom::{RenderIfState, CachedValue};
@@ -115,14 +118,16 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     pub fn attr(&'f mut self, name: &'static str, value: &str)->&'f mut Visitor<'d,'e,EN> {
         if self.edom.create {
             self.get_dnode().set_attribute(name, value);
-            self.element.attr.push((name, value.into()));
+            self.element.attr.push((name, /*Rc::new*/(value.into())));
         } else { 
             let thisattr=&mut self.element.attr[self.attrpos];
             if thisattr.0 != name {
                 panic!("name change")
             }
             if thisattr.1 != value {
-                self.get_dnode().set_attribute(name, value)
+                // thisattr.1=Rc::new(value.into());
+                thisattr.1=value.into();
+                self.get_dnode().set_attribute(name, value);
             }
             self.attrpos+=1
         }
