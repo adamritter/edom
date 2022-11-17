@@ -43,13 +43,9 @@ fn todomvc() {
 	let mut editing = None;
     let mut edit_value = None;
     edom::wasm::render(move |mut root| {
+        let mut root=root.element("section");
+        root.class("todoapp");
         local_storage.set_item("todos-edom", serde_json::to_string(&todolist).unwrap().as_str()).unwrap();
-        let mut root=root.element("span");
-        /*
-            root.head(|head| {
-                head.title("TODOMVC implemented with EDOM");
-            })
-         */
         // root.edom.window.on("hashchange", |_| {
         //     show_state = match root.edom.window.location {
         //         "#/active" => ShowState::Active,
@@ -57,11 +53,10 @@ fn todomvc() {
         //         _ => ShowState::All
         //     }
         // });
-        let num_active = todolist.iter_mut().skip_while(|item| !item.completed).count();
+        let num_active = todolist.iter().filter(|item| !item.completed).count();
 
         root.header(|header| {
             header.h1().text("todos");
-            header.text_input(&mut new_text);
             header.text_input(&mut new_text).class("new-todo")
             .placeholder("What needs to be done?").autofocus(true).on("keydown", |e| {
                 if e.dyn_ref::<web_sys::KeyboardEvent>().unwrap().which() == ENTER_KEY {
@@ -73,17 +68,19 @@ fn todomvc() {
                 }
             });
         }).class("header");
+        let mut remove=None;
+        let mut toggle_all = num_active==0;
        
-        root.render_element_if(todolist.len()>0, "section", |mut section| {
+        // root.render_element_if(todolist.len()>0, "section", |mut section| {
+        let mut section=root.element("section");
             section.class("main");
-            let mut toggle_all = num_active==0;
+            
             if section.checkbox(&mut toggle_all).id("toggle-all").class("toggle-all").changed() {
                 for todo in todolist.iter_mut() {
                     todo.completed = toggle_all;
                 }
             };
             section.label("toggle-all", "Mark all as complete");
-            let mut remove=None;
 
             section.ul(|ul| {
                 ul.class("todo-list");
@@ -123,34 +120,33 @@ fn todomvc() {
                     });
                 });
             });
-            if section.button("clear_completed").clicked() {
-                todolist.retain(|e| !e.completed);
-            }
-            render_footer(&mut section, &mut todolist, num_active, &mut show_state);
             if let Some(remove_id) = remove {
                 todolist.retain(|e| e.id != remove_id);
             }
+            render_footer(&mut section, &mut todolist, num_active, &mut show_state);
         });
-    });
+
 }
 
 fn render_footer<EN: edom::ElementNode>(container : &mut edom::Visitor<EN>, todolist :&mut Vec<TodoItem>,
         num_active: usize, show_state: &mut ShowState) {
     container.footer(|footer| {
+        footer.class("footer");
         footer.span(|span| {
             span.class("todo-count");
             span.strong().text(num_active.to_string().as_str());
             span.text(if num_active==1 {"item left"} else {"items left"});
         });
         footer.ul(|ul| {
+            ul.class("filters");
             ul.li(|li| {
-                li.a("#/").class(if *show_state==ShowState::All {"selected"} else {""});
+                li.a("#/").class(if *show_state==ShowState::All {"selected"} else {""}).text("All");
             });
             ul.li(|li| {
-                li.a("#/active").class(if *show_state==ShowState::Active {"selected"} else {""});
+                li.a("#/active").class(if *show_state==ShowState::Active {"selected"} else {""}).text("Active");
             });
             ul.li(|li| {
-                li.a("#/completed").class(if *show_state==ShowState::Completed {"selected"} else {""});
+                li.a("#/completed").class(if *show_state==ShowState::Completed {"selected"} else {""}).text("Completed");
             });
         });
         footer.render_element_if(num_active < todolist.len(), "span", |footer| {

@@ -51,6 +51,10 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         let Node::RenderIfElement(_, e)=&self.element.children[child_pos] else { panic!("Not RenderIfElement")};
         e
     }
+    fn get_render_if_element_from_node(node: &mut Node<EN>)->&mut Element<EN> {
+        let Node::RenderIfElement(_, e)=node else { panic!("Not RenderIfElement")};
+        e
+    }
     fn insert_after_last_visible_dnode(&self, child: &EN::GenericNode) {
         EN::Document::log_2("Inserting element at", self.next_dom_child_pos.to_string().as_str());
         self.get_dnode().insert_child_before(
@@ -73,9 +77,16 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         match state.clone() {
             RenderIfState::Hidden => {
                 if should_render {
-                    self.insert_after_last_visible_dnode(
-                        self.get_render_if_element_at(new_pos).dnode.unwrap().into_generic_node());
+                        let child_cached_dnode= &self.get_render_if_element_at(new_pos).dnode;
+                        let child_dnode=child_cached_dnode.get(|| 
+                            self.get_dnode().get_child_node(self.next_dom_child_pos as u32).unwrap().into_element_node());
+                        self.insert_after_last_visible_dnode(child_dnode.into_generic_node());
                         self.element.children[new_pos].set_render_if_state(RenderIfState::Visible);
+                        let mut it=Visitor::new(&mut self.edom,
+                            Self::get_render_if_element_from_node(&mut self.element.children[new_pos]),
+                            new_pos, Some(cself));
+                        fcb(&mut it);
+    
                 }
             },
             RenderIfState::NotRendered => {
@@ -89,14 +100,21 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
                     fcb(&mut it);
                     self.edom.create=create;
                     self.insert_after_last_visible_dnode(elem.dnode.unwrap().into_generic_node());
-                    self.element.children[new_pos].set_render_if_state(RenderIfState::Visible);
+                    self.element.children[new_pos]=Node::RenderIfElement(RenderIfState::Visible, elem);
                 }
             },
             RenderIfState::Visible => {
                 if !should_render {
-                    self.get_dnode().remove_child(
-                        self.get_render_if_element_at(new_pos).dnode.unwrap());
+                    let child_cached_dnode= &self.get_render_if_element_at(new_pos).dnode;
+                    let child_dnode=child_cached_dnode.get(|| 
+                        self.get_dnode().get_child_node(self.next_dom_child_pos as u32).unwrap().into_element_node());
+                    self.get_dnode().remove_child(child_dnode);
                     self.element.children[new_pos].set_render_if_state(RenderIfState::Hidden);
+                } else {
+                    let mut it=Visitor::new(&mut self.edom,
+                        Self::get_render_if_element_from_node(&mut self.element.children[new_pos]),
+                        new_pos, Some(cself));
+                    fcb(&mut it);
                 }
             }
         }
@@ -251,8 +269,8 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
                     position.insert(v[abspos].0, abspos);
                 }
                 if wrong_place.contains(&idx) {
-                    #[allow(mismatched_arg_count)]
-                    wrong_place.remove(&idx);
+                    // Needed this syntax because of a bug in rust-analyzer.
+                    HashSet::<u64>::remove(&mut wrong_place, &idx);
                     if i==0 {
                         // TODO: get last visited child to support for_each after other elements
                         dnode.prepend_child(&v[i].1.dnode.unwrap());

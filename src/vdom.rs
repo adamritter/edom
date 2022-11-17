@@ -1,5 +1,7 @@
+use std::fmt;
 use std::rc::Rc;
 
+use crate::ElementNode;
 use crate::dom::EventHandler;
 use crate::dom::GenericNode;
 
@@ -11,6 +13,13 @@ pub enum Node<EN> where EN:dom::ElementNode {
     Element(Element<EN>),
     ForEach(Vec<(u64, Element<EN>)>),
     RenderIfElement(RenderIfState, Element<EN>)
+}
+
+impl<EN:dom::ElementNode> Node<EN> {
+    pub fn get_text(&self)->&String {
+        let Node::Text(s, _)=self else {panic!("Not text")};
+        return s
+    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -146,5 +155,68 @@ impl<EN> Element<EN>  where EN:dom::ElementNode {
             }
         }
     }
-    
+
+    pub fn render_to(&self, s: &mut String) {
+        s.push('<');
+        push_quoted_html(s, self.name);
+        for a in &self.attr {
+            s.push(' ');
+            push_quoted_html(s, a.0);
+            s.push('=');
+            push_quoted_attr_value(s, a.0);
+        }
+        s.push('>');
+        for child in &self.children {
+            match child {
+                Node::Element(e)=>e.render_to(s),
+                Node::RenderIfElement(state, e)=>{
+                    if *state==RenderIfState::Visible {
+                        e.render_to(s);
+                    }
+                },
+                Node::Text(t, _)=>push_quoted_html(s, t),
+                Node::ForEach(l)=>{
+                    for e in l {
+                        e.1.render_to(s);
+                    }
+                }
+            }
+        }
+        s.push_str("</");
+        push_quoted_html(s, self.name);
+        s.push('>');
+    }
+    to_strin
+}
+
+impl<EN:dom::ElementNode> fmt::Display for Element<EN> {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("hello")
+    }
+}
+
+fn push_quoted_html(to: &mut String, s: &str) {
+    for c in s.chars() {
+        match c {
+            '<'=> to.push_str("&lt;"),
+            '>'=> to.push_str("&gt;"),
+            '&'=> to.push_str("&amp;"),
+            _ => to.push(c)
+        }
+    }
+}
+
+fn push_quoted_attr_value(to: &mut String, s: &str) {
+    to.push('"');
+    for c in s.chars() {
+        match c {
+            '<'=> to.push_str("&lt;"),
+            '>'=> to.push_str("&gt;"),
+            '&'=> to.push_str("&amp;"),
+            '"'=> to.push_str("&quot;"),
+            _ => to.push(c)
+        }
+    }
+    to.push('"');
 }

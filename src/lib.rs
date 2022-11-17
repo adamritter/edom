@@ -80,6 +80,13 @@ impl<EN> EDOM<EN> where EN:dom::ElementNode {
             event_handler: EN::EventHandler::new(fe2)
         }
     }
+    fn test_fire_event(&mut self, uid: u64, name: &str , event: EN::Event) {
+        let fire_event=self.fire_event.clone();
+        fire_event.borrow_mut()(uid, name.to_string(), event);
+    }
+    fn get_root(&self)->&vdom::Element<EN> {
+        self.root.as_ref().unwrap()
+    }
 }
 
 pub mod noop;
@@ -172,10 +179,12 @@ fn test_swap_rows() {
             assert_eq!(4, node.next_dom_child_pos);
         });
     });
+    // (*edom).borrow_mut().test_fire_event(1, "click", noop::Event {});
     let fire_event=(*edom).borrow_mut().fire_event.clone();
     fire_event.borrow_mut()(1, "click".to_string(), noop::Event {});
     let edom=(*edom).borrow_mut();
-    let root=edom.root.as_ref().unwrap();
+    let root=edom.get_root();
+
     let vdom::Node::Element(table)=&root.children[1] else {panic!("No table")};
     assert_eq!("tbody", table.name);
     let vdom::Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
@@ -199,13 +208,36 @@ fn test_remove_row() {
             node.text(id.to_string().as_str());
         });
     });
+    // (*edom).borrow_mut().test_fire_event(1, "click", noop::Event {});
     let fire_event=(*edom).borrow_mut().fire_event.clone();
     fire_event.borrow_mut()(1, "click".to_string(), noop::Event {});
     let edom=(*edom).borrow_mut();
-    let root=edom.root.as_ref().unwrap();
+    let root=edom.get_root();
     let vdom::Node::Element(table)=&root.children[1] else {panic!("No table")};
     assert_eq!("tbody", table.name);
     let vdom::Node::ForEach(fe)=&table.children[0] else {panic!("No foreach found")};
     let vdom::Node::Text(s, _)=&fe[1].1.children[0] else {panic!("No text found")};
     assert_eq!("3", s.as_str());
+}
+
+
+#[test]
+fn test_render_if() {
+    let mut button_clicked=false;
+    let edom=EDOM::render(noop::ElementNode {tag:"body", generic_node: noop::Node {  }}, move |mut root| {
+        root.render_element_if(true, "span", |span| {
+            let mut button=span.button("hello");
+            assert_eq!(2, button.element.uid);
+            if button.clicked() {
+                button_clicked=true;
+                print!("button clicked");
+            }
+        });
+        root.text(button_clicked.to_string().as_str());
+    });
+    let fire_event=(*edom).borrow_mut().fire_event.clone();
+    fire_event.borrow_mut()(2, "click".to_string(), noop::Event {});
+    let edom=(*edom).borrow_mut();
+    let root=edom.get_root();
+    assert_eq!("true", root.children[1].get_text());
 }

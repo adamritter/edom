@@ -104,7 +104,7 @@ impl dom::ElementNode for web_sys::Element {
         self.insert_before(child, next_sibling.as_ref()).unwrap();
     }
     fn remove_child(&self, child: &Self) {
-        web_sys::Element::remove_child(self, child);
+        web_sys::Node::remove_child(self, child).unwrap();
     }
     fn prepend_child(&self, child: &Self) {
         self.insert_before(child, self.first_child().as_ref()).unwrap();

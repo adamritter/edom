@@ -16,6 +16,12 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         fcb(&mut r);
         return r;
     }
+    pub fn element_with_children<FCB:FnMut(&mut Visitor<EN>)>(
+            &'f mut self, name: &'static str, mut fcb: FCB)->Visitor<'f,'f,EN>  {
+        let mut r=self.element(name);
+        fcb(&mut r);
+        return r;
+    }
     pub fn ul<FCB:FnMut(&mut Visitor<EN>)>(
         &'f mut self, mut fcb: FCB)->Visitor<'f,'f,EN>  {
         let mut r=self.element("ul");
@@ -58,6 +64,9 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     pub fn h1(&'f mut self)->Visitor<'f,'f,EN> {
         self.element("h1")
     }
+    pub fn br(&'f mut self)->Visitor<'f,'f,EN> {
+        self.element("br")
+    }
     pub fn strong(&'f mut self)->Visitor<'f,'f,EN> {
         self.element("strong")
     }
@@ -67,7 +76,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         r
     }
     pub fn label(&'f mut self, for_: &str, text: &str)->Visitor<'f, 'f, EN> {
-        let mut r=self.element("a");
+        let mut r=self.element("label");
         r.attr("for", for_);
         r.text(text);
         r
