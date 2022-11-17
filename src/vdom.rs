@@ -186,14 +186,6 @@ impl<EN> Element<EN>  where EN:dom::ElementNode {
         push_quoted_html(s, self.name);
         s.push('>');
     }
-    to_strin
-}
-
-impl<EN:dom::ElementNode> fmt::Display for Element<EN> {
-    // This trait requires `fmt` with this exact signature.
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("hello")
-    }
 }
 
 fn push_quoted_html(to: &mut String, s: &str) {

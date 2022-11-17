@@ -181,7 +181,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     }
     pub fn double_clicked(&'c mut self)->bool {
         let mut r=false;
-        self.on("doubleclick", |_| r=true);
+        self.on("dblclick", |_| r=true);
         r
     }
 }
