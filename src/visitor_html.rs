@@ -70,9 +70,10 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     pub fn strong(&'f mut self)->Visitor<'f,'f,EN> {
         self.element("strong")
     }
-    pub fn a(&'f mut self, text: &str)->Visitor<'f, 'f, EN> {
+    pub fn a(&'f mut self, href: &str, text: &str)->Visitor<'f, 'f, EN> {
         let mut r=self.element("a");
-        r.attr("href", text);
+        r.attr("href", href);
+        r.text(text);
         r
     }
     pub fn label(&'f mut self, for_: &str, text: &str)->Visitor<'f, 'f, EN> {

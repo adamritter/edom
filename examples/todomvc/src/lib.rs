@@ -1,8 +1,6 @@
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 use wasm_bindgen::{JsCast};
-use edom::ElementNode;
-use edom::Visitor;
 
 #[derive(PartialEq)]
 enum ShowState {
@@ -23,7 +21,7 @@ use edom;
 const ENTER_KEY: u32 = 13;
 const ESCAPE_KEY: u32 = 27;
 
-use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 // TODO: how to run server?
 #[wasm_bindgen(start)]
@@ -41,7 +39,7 @@ fn todomvc() {
     let mut show_state=ShowState::All;
     let mut new_text=String::new();
 	let mut editing = None;
-    let mut edit_value = None;
+    let mut edit_value = String::new();
     edom::wasm::render(move |mut root| {
         let mut root=root.element("section");
         root.class("todoapp");
@@ -63,7 +61,7 @@ fn todomvc() {
                     todolist.push(TodoItem {id: Uuid::new_v4(), completed: false, description: new_text.clone()});
                     new_text.clear();
                     web_sys::console::log_2(&"Enter".into(), &new_text.clone().into());
-                    // e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
+                    e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
                     e.prevent_default();
                 }
             });
@@ -71,8 +69,7 @@ fn todomvc() {
         let mut remove=None;
         let mut toggle_all = num_active==0;
        
-        // root.render_element_if(todolist.len()>0, "section", |mut section| {
-        let mut section=root.element("section");
+        root.render_element_if(todolist.len()>0, "section", |mut section| {
             section.class("main");
             
             if section.checkbox(&mut toggle_all).id("toggle-all").class("toggle-all").changed() {
@@ -99,17 +96,17 @@ fn todomvc() {
                         view.checkbox(&mut todo.completed).class("toggle");
                         if view.label("", todo.description.as_str()).double_clicked() {
                             editing=Some(todo.id);
-                            edit_value=Some(todo.description.clone());
+                            edit_value=todo.description.clone();
                         }
                         if view.button("").class("destroy").clicked() {
                             remove=Some(todo.id);
                         }
                     });
                     li.render_element_if(Some(todo.id) == editing, "span", |li2| {
-                        li2.text_input(&mut new_text).id("edit").class("edit").autofocus(true).on("keydown", |e| {
+                        li2.text_input(&mut edit_value).id("edit").class("edit").autofocus(true).on("keydown", |e| {
                             let which=e.dyn_ref::<web_sys::KeyboardEvent>().unwrap().which();
                             if which == ENTER_KEY {
-                                todo.description=new_text.clone();
+                                todo.description=edit_value.clone();
                                 editing=None;
                                 e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
                             } else if which == ESCAPE_KEY {
@@ -125,7 +122,7 @@ fn todomvc() {
             }
             render_footer(&mut section, &mut todolist, num_active, &mut show_state);
         });
-
+    });
 }
 
 fn render_footer<EN: edom::ElementNode>(container : &mut edom::Visitor<EN>, todolist :&mut Vec<TodoItem>,
@@ -135,18 +132,24 @@ fn render_footer<EN: edom::ElementNode>(container : &mut edom::Visitor<EN>, todo
         footer.span(|span| {
             span.class("todo-count");
             span.strong().text(num_active.to_string().as_str());
-            span.text(if num_active==1 {"item left"} else {"items left"});
+            span.text(if num_active==1 {" item left"} else {" items left"});
         });
         footer.ul(|ul| {
             ul.class("filters");
             ul.li(|li| {
-                li.a("#/").class(if *show_state==ShowState::All {"selected"} else {""}).text("All");
+                if li.a("#/", "All").class(if *show_state==ShowState::All {"selected"} else {""}).clicked() {
+                    *show_state=ShowState::All;
+                }
             });
             ul.li(|li| {
-                li.a("#/active").class(if *show_state==ShowState::Active {"selected"} else {""}).text("Active");
+                if li.a("#/active", "Active").class(if *show_state==ShowState::Active {"selected"} else {""}).clicked() {
+                    *show_state=ShowState::Active;
+                }
             });
             ul.li(|li| {
-                li.a("#/completed").class(if *show_state==ShowState::Completed {"selected"} else {""}).text("Completed");
+                if li.a("#/completed", "Completed").class(if *show_state==ShowState::Completed {"selected"} else {""}).clicked() {
+                    *show_state=ShowState::Completed;
+                }
             });
         });
         footer.render_element_if(num_active < todolist.len(), "span", |footer| {
