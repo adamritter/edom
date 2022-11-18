@@ -23,7 +23,6 @@ const ESCAPE_KEY: u32 = 27;
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
-// TODO: how to run server?
 #[wasm_bindgen(start)]
 pub fn main() {
     todomvc();

@@ -82,7 +82,11 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 
-impl dom::Event for web_sys::Event {}
+impl dom::Event for web_sys::Event {
+    fn prevent_default(&self) {
+        web_sys::Event::prevent_default(&self)
+    }
+}
 
 impl dom::ElementNode for web_sys::Element {
     type TextNode = web_sys::Text;

@@ -53,4 +53,6 @@ pub trait TextNode {
     fn new(text: &str)->Self;
 }
 
-pub trait Event {}
+pub trait Event {
+    fn prevent_default(&self);
+}

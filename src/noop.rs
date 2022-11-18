@@ -31,7 +31,9 @@ impl dom::GenericNode for Node {
 }
 
 pub struct Event {}
-impl dom::Event for Event {}
+impl dom::Event for Event {
+    fn prevent_default(&self) {}
+}
 
 
 

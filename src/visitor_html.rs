@@ -1,5 +1,7 @@
 use std::rc::Rc;
 
+use crate::dom::Event;
+
 use super::dom;
 use super::dom::Document;
 use super::visitor::Visitor;
@@ -21,6 +23,9 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         let mut r=self.element(name);
         fcb(&mut r);
         return r;
+    }
+    pub fn form<FCB:FnMut(&mut Visitor<EN>)>(&'f mut self, fcb: FCB)->Visitor<'f,'f,EN>  {
+        self.element_with_children("form", fcb)
     }
     pub fn ul<FCB:FnMut(&mut Visitor<EN>)>(
         &'f mut self, mut fcb: FCB)->Visitor<'f,'f,EN>  {
@@ -150,7 +155,7 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     }
     pub fn changed(&mut self)->bool {
         let mut changed=false;
-        self.on("change", |_| { changed=true; });
+        self.on("input", |_| { changed=true; });
         changed
     }
     pub fn id(&'f mut self, id: &str)->&'f mut Visitor<'d,'e,EN> {
@@ -158,6 +163,12 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     }
     pub fn class(&'f mut self, id: &str)->&'f mut Self {
         self.attr("class", id)
+    }
+    pub fn min(&'f mut self, f: f64)->&'f mut Self {
+        self.attr("min", f.to_string().as_str())
+    }
+    pub fn max(&'f mut self, f: f64)->&'f mut Self {
+        self.attr("max", f.to_string().as_str())
     }
     pub fn classes(&'f mut self, data: &[(&str, bool)])->&'f mut Self {
         let mut class=String::new();
@@ -177,7 +188,17 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
     }
     pub fn clicked(&'c mut self)->bool {
         let mut r=false;
-        self.on("click", |_| r=true);
+        self.on("click", |e| {e.prevent_default(); r=true;});
+        r
+    }
+    pub fn submit_button(&'f mut self, s: &str)->Visitor<'f,'f,EN> {
+        let mut r=self.element("input");
+        r.attr("type", "submit").attr("value", s);
+        r
+    }
+    pub fn on_submit(&'c mut self)->bool {
+        let mut r=false;
+        self.on("submit", |e| {e.prevent_default(); r=true;});
         r
     }
     pub fn double_clicked(&'c mut self)->bool {
