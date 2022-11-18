@@ -43,14 +43,6 @@ fn todomvc() {
         let mut root=root.element("section");
         root.class("todoapp");
         local_storage.set_item("todos-edom", serde_json::to_string(&todolist).unwrap().as_str()).unwrap();
-        // Not yet implemented in EDOM.
-        // root.edom.window.on("hashchange", |_| {
-        //     show_state = match root.edom.window.location {
-        //         "#/active" => ShowState::Active,
-        //         "#/completed" => ShowState::Completed,
-        //         _ => ShowState::All
-        //     }
-        // });
         let num_active = todolist.iter().filter(|item| !item.completed).count();
 
         root.header(|header| {
