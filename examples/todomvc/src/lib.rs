@@ -37,7 +37,7 @@ fn todomvc() {
     }
     let mut show_state=ShowState::All;
     let mut new_text=String::new();
-	let mut editing = None;
+    let mut editing = None;
     let mut edit_value = String::new();
     edom::wasm::render(move |mut root| {
         let mut root=root.element("section");
