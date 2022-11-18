@@ -13,6 +13,7 @@ console_error_panic_hook = "0.1.7"
 getrandom = {version = "0.2.8", features = ["js"]}
 rand = {version = "0.8.5", features = ["small_rng"]}
 smallstr = {version = "0.3.0"}
+embed-doc-image = "0.1.4"
 
 [dependencies.web-sys]
 version = "0.3.53"
@@ -41,3 +42,11 @@ criterion = "0.4"
 [[bench]]
 name = "bench"
 harness = false
+
+[features]
+doc-images = []
+
+[package.metadata.docs.rs]
+# docs.rs uses a nightly compiler, so by instructing it to use our `doc-images` feature we
+# ensure that it will render any images that we may have in inner attribute documentation.
+features = ["doc-images"]

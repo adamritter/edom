@@ -1,7 +1,9 @@
 
 use std::{cell::RefCell, rc::Rc};
 
+/// An abstraction for DOM node that contains associated types for other `dom` structs
 pub trait ElementNode : Sized {
+    /// A generic node that can be text node or element node as well
     type GenericNode : GenericNode<TextNode=Self::TextNode, ElementNode=Self>;
     type TextNode : TextNode;
     type Document : Document<TextNode=Self::TextNode, ElementNode=Self>;
@@ -21,6 +23,7 @@ pub trait ElementNode : Sized {
     fn create_dnode_event_listener(&self, f : Rc<RefCell<dyn FnMut(u64, &'static str)>>, uid:u64, name:&'static str);
     fn deep_clone(&self)->Self;
     fn get_child_nodes(&self)->Vec<Self::GenericNode>;
+    // Get selected child node (indexed from 0)
     fn get_child_node(&self, i:u32)->Option<Self::GenericNode>;
     fn set_text_content(&self, s:&str);
     fn into_generic_node(&self)->&Self::GenericNode;

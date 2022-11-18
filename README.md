@@ -1,39 +1,27 @@
-TODO:
-    - Convert examples from other frameworks, show comparisions.
-    - Recursive foreach
-    - Server side rendering
-    + Benchmark
-        + Create 10k elements
-        + Swap speed
-        + Try RC<String>
-    - Implement inmemorydom
-    - Improve class names (ElementNode -> Element?)
-    - Tutorial
-    - fetch
-    - HN clone
-    - Store Event (check if event was already subscribed to?)
-    - Svelte like templates
-    + <input type=number bind:value={a} min=0 max=10>
-    + <input type=range bind:value={a} min=0 max=10>
-    + <input type=checkbox bind:checked={yes}>
-    + <input type=radio bind:group={scoops} name="scoops" value={1}>
-    + <textarea bind:value={value}></textarea>
-    + Implement render_if
-    - <select bind:value={selected} on:change="{() => answer = ''}">
-        - <option value={question}> text
-            Note that the <option> values are objects rather than strings. Svelte doesn't mind.
+# An immediate mode web frontend library written in Rust.
 
-    - A select can have a multiple attribute, in which case it will populate an array rather than selecting a single value.
+It builds up VDOM for not having to run too many DOM operations,
+but as it runs every time any change is executed, it allows for a simple
+programming model without message passing / callbacks / signals, just like EGUI.
 
-    - <div
-	    contenteditable="true"
-	    bind:innerHTML={html}
-        ></div>
-    - You can even bind to properties inside an each block.
-    - document get_dnode()
-    - timer events
-    - animation:  <progress value={$progress}></progress> https://svelte.dev/tutorial/tweened
-    - fade transition
+The render function is called once for creating the initial web page, and then
+twice for each event: 
+- once for computing the side effects of the event
+- once more for rendering the changes that happened by modifying the state (variables)
 
+# A very simple program to illustrate usage
+(in `examples/demo` directory):
 
+# An immediate mode web frontend library written in Rust.
 
+It builds up VDOM for not having to run too many DOM operations,
+but as it runs every time any change is executed, it allows for a simple
+programming model without message passing / callbacks / signals, just like EGUI.
+
+The render function is called once for creating the initial web page, and then
+twice for each event: 
+- once for computing the side effects of the event
+- once more for rendering the changes that happened by modifying the state (variables)
+
+# A very simple program to illustrate usage
+(in `examples/demo` directory):

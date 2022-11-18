@@ -1,25 +1,79 @@
 #![warn(missing_docs)]
-//! EDOM is an immediate mode web frontend library written in Rust.
+//! # An immediate mode web frontend library written in Rust.
 //! 
 //! It builds up VDOM for not having to run too many DOM operations,
 //! but as it runs every time any change is executed, it allows for a simple
 //! programming model without message passing / callbacks / signals, just like EGUI.
 //! 
+//! The render function is called once for creating the initial web page, and then
+//! twice for each event: 
+//! - once for computing the side effects of the event
+//! - once more for rendering the changes that happened by modifying the state (variables)
+//! 
+//! # A very simple program to illustrate usage
+//! (in `examples/demo` directory):
+//! 
+//! ```
+//! use edom;
+//! use wasm_bindgen::prelude::wasm_bindgen;
+//!
+//! #[wasm_bindgen(start)]
+//! pub fn demo() {
+//!     let mut name = "Arthur".to_string();
+//!     let mut age:f64 = 42.0;
+//!     edom::wasm::render(move |mut root| {
+//!         root.h1().text("My edom application");
+//!         root.div(|div| {
+//!             div.text("Your name: ");
+//!             div.text_input(&mut name);
+//!         });
+//!         root.div(|div| {
+//!             div.range_input(&mut age, 0.0, 120.0);
+//!             div.number_input(&mut age).min(0.0).max(120.0);
+//!             div.text("age");
+//!         });
+//!         if root.button("Click each year").clicked() {
+//!             age+=1.0;
+//!         }
+//!         root.br();
+//!         root.text(format!("Hello '{}', age {}", name, age).as_str());
+//!     });
+//! }
+//! ```
+//! 
+#![cfg_attr(feature = "doc-images",
+cfg_attr(all(),
+doc = ::embed_doc_image::embed_image!("demo", "demo.gif")))]
+#![cfg_attr(
+not(feature = "doc-images"),
+doc = "**Doc images not enabled**. Compile with feature `doc-images` and Rust version >= 1.54 \
+           to enable."
+)]
+//! # The web page looks like this: 
+//! 
+//! 
+//! ![Demo][demo]
 
 extern crate console_error_panic_hook;
 extern crate smallstr;
-
+extern crate embed_doc_image;
 pub use dom::{EventHandler, Document};
 
+/// An abstraction for DOM operations (collection of traits)
 pub mod dom;
+/// An implementation of [`dom`] traits using wasm-bindgen
 pub mod wasm;
+/// A virtual DOM that is created for only calling the necessary [`dom`] operations.
 pub mod vdom;
 use std::rc::Rc;
 use std::cell::RefCell;
+/// Visitor pattern for building / visiting entries of [`vdom`] and doing [`dom`] manipulations. 
 pub mod visitor;
+/// Visitor struct for building / visiting entries of [`vdom`] and doing [`dom`] manipulations.
 pub use visitor::Visitor;
 pub use dom::ElementNode;
 
+/// Main structure for building and rendering a [`vdom`] tree and running the event loop.
 pub struct EDOM<EN> where EN:dom::ElementNode {
     firing_event: Option<(u64, String, EN::Event)>,
     last_uid: u64,
@@ -96,7 +150,9 @@ impl<EN> EDOM<EN> where EN:dom::ElementNode {
     }
 }
 
-pub mod noop;
+/// A no-operation implementation of [`dom`] operations for testing and outputting HTML.
+pub mod noop;  
+/// Functions for manipulations that are specific to HTML in the [`visitor`].
 pub mod visitor_html;
 
 #[test]

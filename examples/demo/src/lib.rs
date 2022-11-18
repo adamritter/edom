@@ -3,8 +3,8 @@ use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen(start)]
 pub fn demo() {
-    let mut name="Arthur".to_string();
-    let mut age:f64=42.0;
+    let mut name = "Arthur".to_string();
+    let mut age:f64 = 42.0;
     edom::wasm::render(move |mut root| {
         root.h1().text("My edom application");
         root.div(|div| {

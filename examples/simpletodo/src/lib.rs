@@ -72,5 +72,7 @@ pub fn simpletodo() {
                 todolist.retain(|item| item.id!=delete_id);
             }
         });
+        local_storage.set_item("simpletodo-edom",
+            serde_json::to_string(&(n, &todolist)).unwrap().as_str()).unwrap();
     });
 }
