@@ -8,6 +8,7 @@ readme = "README.md"
 homepage = "https://github.com/adamritter/edom"
 repository = "https://github.com/adamritter/edom"
 keywords = ["web", "wasm"]
+categories = ["wasm"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
