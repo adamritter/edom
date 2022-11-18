@@ -43,3 +43,5 @@ pub fn demo() {
 ![Demo](demo.gif)
 
 
+For a more complex example check [TODOMVC](https://github.com/adamritter/edom/blob/main/examples/todomvc/src/lib.rs)
+
