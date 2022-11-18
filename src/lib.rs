@@ -1,3 +1,10 @@
+#![warn(missing_docs)]
+//! EDOM is an immediate mode web frontend library written in Rust.
+//! 
+//! It builds up VDOM for not having to run too many DOM operations,
+//! but as it runs every time any change is executed, it allows for a simple
+//! programming model without message passing / callbacks / signals, just like EGUI.
+//! 
 
 extern crate console_error_panic_hook;
 extern crate smallstr;

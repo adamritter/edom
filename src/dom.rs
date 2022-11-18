@@ -1,3 +1,4 @@
+
 use std::{cell::RefCell, rc::Rc};
 
 pub trait ElementNode : Sized {
@@ -23,6 +24,7 @@ pub trait ElementNode : Sized {
     fn get_child_node(&self, i:u32)->Option<Self::GenericNode>;
     fn set_text_content(&self, s:&str);
     fn into_generic_node(&self)->&Self::GenericNode;
+    fn focus(&self);
 }
 
 pub trait GenericNode  : Sized {

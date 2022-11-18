@@ -43,6 +43,7 @@ fn todomvc() {
         let mut root=root.element("section");
         root.class("todoapp");
         local_storage.set_item("todos-edom", serde_json::to_string(&todolist).unwrap().as_str()).unwrap();
+        // Not yet implemented in EDOM.
         // root.edom.window.on("hashchange", |_| {
         //     show_state = match root.edom.window.location {
         //         "#/active" => ShowState::Active,
@@ -107,11 +108,10 @@ fn todomvc() {
                             if which == ENTER_KEY {
                                 todo.description=edit_value.clone();
                                 editing=None;
-                                e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
                             } else if which == ESCAPE_KEY {
                                 editing = None;
-                                e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
                             }
+                            e.target().unwrap().dyn_ref::<web_sys::HtmlElement>().unwrap().blur().unwrap();
                         });
                     });
                 });

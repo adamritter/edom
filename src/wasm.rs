@@ -80,6 +80,7 @@ impl dom::GenericNode for web_sys::Node {
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use web_sys::HtmlElement;
 
 
 impl dom::Event for web_sys::Event {
@@ -184,7 +185,9 @@ impl dom::ElementNode for web_sys::Element {
     fn into_generic_node(&self)->&Self::GenericNode {
         self.as_ref()
     }
-
+    fn focus(&self) {
+        self.dyn_ref::<HtmlElement>().unwrap().focus().unwrap();
+    }
 }
 
 pub fn render<F>(f:F) where F:FnMut(super::Visitor<web_sys::Element>) + 'static {

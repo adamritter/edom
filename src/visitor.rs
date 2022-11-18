@@ -94,12 +94,12 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
                     // Need to create new element
                     let mut elem=self.create_element(tag);
                     let create=self.edom.create;
+                    self.insert_after_last_visible_dnode(elem.dnode.unwrap().into_generic_node());
                     self.edom.create=true;
                     let mut it=Visitor::new(&mut self.edom, 
                         &mut elem, new_pos, Some(cself));
                     fcb(&mut it);
                     self.edom.create=create;
-                    self.insert_after_last_visible_dnode(elem.dnode.unwrap().into_generic_node());
                     self.element.children[new_pos]=Node::RenderIfElement(RenderIfState::Visible, elem);
                 }
             },

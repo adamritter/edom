@@ -1,7 +1,6 @@
 use std::rc::Rc;
 
 use crate::dom::Event;
-
 use super::dom;
 use super::dom::Document;
 use super::visitor::Visitor;
@@ -59,9 +58,15 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         return r;
     }
 
+    pub fn focus(&self) {
+        self.get_dnode().focus();
+    }
 
     pub fn placeholder(&'f mut self, text: &str)->&'f mut Self {
         self.attr("placeholder", text)
+    }
+    pub fn style(&'f mut self, text: &str)->&'f mut Self {
+        self.attr("style", text)
     }
     pub fn autofocus(&'f mut self, value: bool)->&'f mut Self {
         self.attr("autofocus", value.to_string().as_str())

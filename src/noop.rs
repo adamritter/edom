@@ -91,6 +91,8 @@ impl  dom::ElementNode for ElementNode {
     fn into_generic_node(&self)->&Self::GenericNode {
         &self.generic_node
     }
+    fn focus(&self) {
+    }
 
 }
 
