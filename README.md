@@ -1,5 +1,9 @@
 # An immediate mode web frontend library written in Rust.
 
+[![Latest version](https://img.shields.io/crates/v/edom.svg)](https://crates.io/crates/edom)
+[![Documentation](https://docs.rs/edom/badge.svg)](https://docs.rs/edom)
+[![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/adamritter/edom/blob/main/LICENSE)
+
 It builds up VDOM for not having to run too many DOM operations,
 but as it runs every time any change is executed, it allows for a simple
 programming model without message passing / callbacks / signals, just like EGUI.
