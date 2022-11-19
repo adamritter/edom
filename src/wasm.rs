@@ -81,6 +81,7 @@ impl dom::GenericNode for web_sys::Node {
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
+use web_sys::HtmlInputElement;
 
 
 impl dom::Event for web_sys::Event {
@@ -129,15 +130,14 @@ impl dom::ElementNode for web_sys::Element {
         }
     }
     fn get_attribute(&self, name: &str)->String {
-        if name=="checked" {
-            let e: &web_sys::HtmlInputElement= self.dyn_ref().unwrap();
-            if e.checked() {"true".to_string()} else {"false".to_string()}
-        } else if name=="value" {
-            let e: &web_sys::HtmlInputElement= self.dyn_ref().unwrap();
-            e.value()
-        } else {
-            web_sys::Element::get_attribute(self, name).unwrap()
+        if let Some(input_element) = self.dyn_ref::<HtmlInputElement>()  {
+            if name=="checked" {
+                return if input_element.checked() {"true".to_string()} else {"false".to_string()}
+            } else if name=="value" {
+                return input_element.value();
+            }
         }
+        return web_sys::Element::get_attribute(self, name).unwrap();
     }
     fn remove(&self) {
         web_sys::Element::remove(&self);
