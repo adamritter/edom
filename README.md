@@ -49,3 +49,4 @@ pub fn demo() {
 
 For a more complex example check [TODOMVC](https://github.com/adamritter/edom/blob/main/examples/todomvc/src/lib.rs)
 
+![Benchmark](edom_benchmark.png)
