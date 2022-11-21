@@ -1,5 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
+use crate::dom::GenericNode;
+
 use super::dom;
 
 pub struct EventHandler {
@@ -131,4 +133,9 @@ impl dom::TextNode for TextNode {
     fn new(text: &str)->Self {
         Self { text: text.to_string() }
     }
+}
+
+pub fn render<F>(f:F) where F:FnMut(super::Visitor<ElementNode>) + 'static {
+    let body=crate::noop::ElementNode {generic_node: Node {}, tag: "body"};
+    super::EDOM::render(body, f);
 }

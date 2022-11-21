@@ -1,3 +1,4 @@
+#[cfg(not(doctest))]
 use std::fmt;
 use std::rc::Rc;
 
@@ -11,6 +12,19 @@ use super::visitor::Visitor;
 pub enum Node<EN> where EN:dom::ElementNode {
     Text(Rc<String>, Option<EN::TextNode>),
     Element(Element<EN>),
+    /// The node type uses 64 bit hashes as an index for keyed enumeration
+    ///  (64 bit could be changed to 128 bit, but for 10-50k items the chance of collision is very low).
+    ///  A part of the todo list that shows how to use it:
+    /// ```
+    ///  struct TodoItem {id: u64, done: bool};
+    ///  let mut todolist=vec![TodoItem {id: 0, done: false}, TodoItem {id: 1, done: true}];
+    ///  edom::noop::render(move |mut ul| 
+    ///     ul.for_each(todolist.iter_mut(), |item| item.id, "li", |item,li| {
+    ///         li.style("display: flex; margin: 0; padding: 0;");
+    ///         li.checkbox(&mut item.done);
+    ///     }
+    ///  ));
+    /// ```
     ForEach(Vec<(u64, Element<EN>)>),
     RenderIfElement(RenderIfState, Element<EN>)
 }
@@ -22,6 +36,10 @@ impl<EN:dom::ElementNode> Node<EN> {
     }
 }
 
+/// [`Visitor::render_element_if`] function is doing conditional rendering with a callback.
+/// First if rendering is turned off, the element is in [`RenderIfState::NotRendered`] state.
+/// Then it gets to [`RenderIfState::Visible`], after that [`RenderIfState::Hidden`]
+///  (which means that the DOM nodes are kept).
 #[derive(Clone, PartialEq)]
 pub enum RenderIfState {
     NotRendered,

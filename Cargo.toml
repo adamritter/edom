@@ -37,6 +37,12 @@ features = [
   'Text',
   'console',
   'HtmlInputElement',
+  # Fetch
+  'Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
 ]
 
 [profile.release]
@@ -44,7 +50,10 @@ lto = true
 # panic = "abort"
 
 [dev-dependencies]
-criterion = "0.4"
+criterion = {version="0.4", default-features = false}
+wasm-bindgen-test = "0.3.33"
+wasm-bindgen-futures = "0.4.33"
+
 
 [[bench]]
 name = "bench"

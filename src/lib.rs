@@ -107,7 +107,6 @@ impl<EN> EDOM<EN> where EN:dom::ElementNode {
         let el=vdom::Element::new("body", Some(root), 0);
         let mut edom : EDOM<EN>=EDOM::new(el);
         assert_eq!(0, edom.next_uid());
-        edom.create=true;
         edom.render_once(&mut f);
 
         let fire_event=edom.fire_event.clone();

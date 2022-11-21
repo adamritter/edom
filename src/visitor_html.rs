@@ -212,3 +212,28 @@ impl<'d, 'e, 'f, 'a, 'z, 'c, 'q, EN> Visitor<'d, 'e, EN> where EN:dom::ElementNo
         r
     }
 }
+
+// Execute wasm tests with `wasm-pack test --node`
+#[cfg(test)]
+mod tests {
+    use std::{borrow::BorrowMut, cell::{RefMut, RefCell}};
+
+    use super::*;
+
+    use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
+    use wasm_bindgen_futures::JsFuture;
+    use wasm_bindgen_test::*;
+
+    #[wasm_bindgen_test]
+    fn pass() {
+        web_sys::console::log_1(&"Testing web_sys".into());
+        assert_eq!(1, 1);
+    }
+    
+    #[wasm_bindgen_test]
+    async fn promise_resolve_is_ok_future() {
+        let p = js_sys::Promise::resolve(&JsValue::from(42));
+        let x = JsFuture::from(p).await.unwrap();
+        assert_eq!(x, 42);
+    }
+}
